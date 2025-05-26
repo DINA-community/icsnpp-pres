@@ -1,0 +1,19 @@
+[package]
+script_dir = scripts
+build_command = ./configure && cmake --build build
+test_command = cd testing && btest -c btest.cfg
+summary = Analyzer for OSI Presentation Protocol (PRES)
+description = The Analyzer implements the OSI Presentation Protocol
+    according to ISO 8823 / X.226 and forwards the payload to the
+    appropriate analyzer named 'util::canonify_name("ISO: "+oid)'
+
+[template]
+source = https://github.com/zeek/package-template
+version = v3.1.7
+zkg_version = 3.0.1-33
+features = plugin
+
+[template_vars]
+name = PRES
+namespace = OSS
+

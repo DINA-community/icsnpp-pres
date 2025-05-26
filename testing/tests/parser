@@ -1,0 +1,35 @@
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-cp -c "$TRACES/cp.der" > cp.xml 2>&1
+@TEST-EXEC: btest-diff cp.xml
+
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-cpa -c "$TRACES/cpa.der" > cpa.xml 2>&1
+@TEST-EXEC: btest-diff cpa.xml
+
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-data -c "$TRACES/data.der" > data.xml 2>&1
+@TEST-EXEC: btest-diff data.xml
+
+# We convert der -> xml -> der and check whether input and output are identical.
+
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-cp -c "$TRACES/cp2.der" > cp2.xml 2>&1
+@TEST-EXEC: btest-diff cp2.xml
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-cp -ixer cp2.xml -oder > cp2.der 2>&1
+@TEST-EXEC: diff -q "$TRACES/cp2.der" cp2.der
+
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-cpa -c "$TRACES/cpa2.der" > cpa2.xml 2>&1
+@TEST-EXEC: btest-diff cpa2.xml
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-cpa -ixer cpa2.xml -oder > cpa2.der 2>&1
+@TEST-EXEC: diff -q "$TRACES/cpa2.der" cpa2.der
+
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-cpc -c "$TRACES/cpc2.der" > cpc2.xml 2>&1
+@TEST-EXEC: btest-diff cpc2.xml
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-cpc -ixer cpc2.xml -oder > cpc2.der 2>&1
+@TEST-EXEC: diff -q "$TRACES/cpc2.der" cpc2.der
+
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-data -c "$TRACES/data2.der" > data2.xml 2>&1
+@TEST-EXEC: btest-diff data2.xml
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-data -ixer data2.xml -oder > data2.der 2>&1
+@TEST-EXEC: diff -q "$TRACES/data2.der" data2.der
+
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-abort -c "$TRACES/abort2.der" > abort2.xml 2>&1
+@TEST-EXEC: btest-diff abort2.xml
+@TEST-EXEC: PATH=$ZEEK_PLUGIN_PATH test-abort -ixer abort2.xml -oder > abort2.der 2>&1
+@TEST-EXEC: diff -q "$TRACES/abort2.der" abort2.der
