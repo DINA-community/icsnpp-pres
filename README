@@ -33,6 +33,10 @@ If this package is installed from ZKG, it will be added to the available plugins
 
 If users have ZKG configured to load packages (see `@load packages` in the [ZKG Quickstart Guide](https://docs.zeek.org/projects/package-manager/en/stable/quickstart.html)), this plugin and these scripts will automatically be loaded and ready to go.
 
+## Usage
+
+The plugin enables the integration of application protocols based on the OSI stack. For this, the application protocol anaylzer must have the name `util::canonify_name(“ISO:”+oid)` (e.g. `util::canonify_name("ISO:1.0.9506.4")` which results in "ISO_1_0_9506_4").
+
 ## License
 
 The software was developed on behalf of the BSI (Federal Office for Information Security)
