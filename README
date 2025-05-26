@@ -1,5 +1,40 @@
-This plugin provides a protocol analyzer for the OSI presentation protocol (ISO
-8823 / X.226) for use within Zeek. The analyzer enables Zeek to parse PPDUs and
-automatically forwards pdus of the application layer to the corresponding
-analyzer. For this purpose, the application layer analyzer must have the name
-'util::canonify_name("ISO: "+oid)' (e.g. util::canonify_name("ISO:1.0.9506.4").
+# ICSNPP-PRES
+
+Industrial Control Systems Network Protocol Parsers (ICSNPP) - Connection-Oriented Presentation Protocol (PRES)
+
+## Overview
+
+This plugin provides a protocol analyzer for the OSI Presenation Procol (PRES)
+(ISO 8823 / X.226) for use within Zeek. The analyzer enables Zeek to parse
+ppdus.
+
+## Dependencies
+
+As PRES is a protocol based on the OSI stack, the underlying ISO
+protocol layers must also be processed. The following plugins must therefore
+also be installed:
+
+- [TPKT](https://github.com/DINA-community/icsnpp-tpkt)
+- [COTP](https://github.com/DINA-community/icsnpp-iso-cotp)
+- [SESS](https://github.com/DINA-community/icsnpp-sess)
+
+## Installation
+
+### Package Manager
+
+This script is available as a package for [Zeek Package Manager](https://docs.zeek.org/projects/package-manager/en/stable/index.html).
+
+```bash
+zkg refresh
+zkg install pres
+```
+
+If this package is installed from ZKG, it will be added to the available plugins. This can be tested by running `zeek -NN`. If installed correctly, users will see `ANALYZER_PRES` under the list of plugins.
+
+If users have ZKG configured to load packages (see `@load packages` in the [ZKG Quickstart Guide](https://docs.zeek.org/projects/package-manager/en/stable/quickstart.html)), this plugin and these scripts will automatically be loaded and ready to go.
+
+## License
+
+The software was developed on behalf of the BSI (Federal Office for Information Security)
+
+Copyright (c) 2025 by DINA-Community BSD 3-Clause. [See License](/COPYING)
