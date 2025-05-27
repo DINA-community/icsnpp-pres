@@ -228,6 +228,14 @@ IntrusivePtr<Val> PRES_Analyzer::parse(
         return nullptr;
     }
 
+    char errbuf[128];
+    size_t errlen = sizeof(errbuf)/sizeof(errbuf[0]);
+    if(asn_check_constraints(desc, pdu, errbuf, &errlen)) {
+        Weird("pres_constraint_error", errbuf);
+        desc->free_struct(desc, pdu, 0);
+        return nullptr;
+    }
+
     auto res = process(pdu);
     desc->free_struct(desc, pdu, 0);
     return res;
