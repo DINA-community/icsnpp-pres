@@ -14,15 +14,22 @@ namespace zeek::plugin::pres {
 
 using namespace zeek;
 
-constexpr uint8_t DATA_TRANSFER      = 1;
-constexpr uint8_t REFUSE             = 12;
-constexpr uint8_t CONNECTION_REQUEST = 13;
-constexpr uint8_t CONNECTION_ACCEPT  = 14;
-constexpr uint8_t ABORT              = 25;
-constexpr uint8_t ABORT_ACCEPT       = 26;
-constexpr uint8_t TYPED_DATA         = 33;
-constexpr uint8_t RESYNCHRONIZE_ACK  = 34;
-constexpr uint8_t RESYNCHRONIZE      = 53;
+/*
+ * This are the relevanti types of the underlying sess protocol
+ * according to X.225 chapter 8.3
+ */
+enum SessState {
+    ABORT = 25,
+    ABORT_ACCEPT = 26,
+    ACCEPT = 14,
+    CONNECT = 13,
+    DATA_TRANSFER = 1,
+    DISCONNECT = 10,
+    REFUSE = 12,
+    RESYNCHRONIZE = 53,
+    RESYNCHRONIZE_ACK = 34,
+    TYPED_DATA = 33,
+};
 
 constexpr const char* CONTEXT_TABLE_NAME = "iso_8650_context_identifier";
 
@@ -46,38 +53,39 @@ void PRES_Analyzer::DeliverPacket(int len, const u_char* data, bool orig,
     len--;
 
     switch(sess_state) {
-        case CONNECTION_REQUEST:
+        case CONNECT: // 7.1.1
             pdu = parse<CP_type>(len, data, &asn_DEF_CP_type, process_CP_type);
             if (pdu)
                 parse_context_list(cast_intrusive<RecordVal>(pdu));
             break;
-        case CONNECTION_ACCEPT:
+        case ACCEPT: // 7.1.2
             pdu = parse<CPA_PPDU>(len, data, &asn_DEF_CPA_PPDU, process_CPA_PPDU);
             break;
-        case ABORT:
-        case ABORT_ACCEPT:
-            pdu = parse<Abort_type>(len, data, &asn_DEF_Abort_type, process_Abort_type);
-            break;
-        case TYPED_DATA:
-            pdu = parse<Typed_data_type_t>(len, data, &asn_DEF_Typed_data_type, process_Typed_data_type);
-            break;
-        case RESYNCHRONIZE:
-            pdu = parse<RS_PPDU>(len, data, &asn_DEF_RS_PPDU, process_RS_PPDU);
-            break;
-        case RESYNCHRONIZE_ACK:
-            pdu = parse<RSA_PPDU>(len, data, &asn_DEF_CPA_PPDU, process_RSA_PPDU);
-            break;
-        case REFUSE:
+        case REFUSE: // 7.1.3
             pdu = parse<CPR_PPDU>(len, data, &asn_DEF_CPR_PPDU, process_CPR_PPDU);
             break;
-        default:
+        case ABORT: // 7.3.1, 7.3.2
+            pdu = parse<Abort_type>(len, data, &asn_DEF_Abort_type, process_Abort_type);
+            break;
+        case TYPED_DATA: // 7.5.1
+            pdu = parse<Typed_data_type_t>(len, data, &asn_DEF_Typed_data_type, process_Typed_data_type);
+            break;
+        case RESYNCHRONIZE: // 7.8.1
+            pdu = parse<RS_PPDU>(len, data, &asn_DEF_RS_PPDU, process_RS_PPDU);
+            break;
+        case RESYNCHRONIZE_ACK: // 7.8.2
+            pdu = parse<RSA_PPDU>(len, data, &asn_DEF_CPA_PPDU, process_RSA_PPDU);
+            break;
+        default: // nearly any other case
             pdu = parse<CPC_type_t>(len, data, &asn_DEF_CPC_type, process_CPC_type);
             if (pdu)
                 user_data = cast_intrusive<RecordVal>(pdu);
             break;
     }
+    if(!pdu)
+        return;
 
-    if(!user_data && pdu) {
+    if(!user_data) {
         if(auto rec = cast_intrusive<RecordVal>(pdu)) {
             if(rec->HasField("ttdPPDU")) {
                 user_data = cast_intrusive<RecordVal>(rec->GetField("ttdPPDU"));
