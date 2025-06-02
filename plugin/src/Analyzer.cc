@@ -7,12 +7,14 @@
 #include "Analyzer.h"
 #include "Plugin.h"
 #include "process.h"
+#include "events.bif.h"
 
 #include <zeek/analyzer/Manager.h>
 
 namespace zeek::plugin::pres {
 
 using namespace zeek;
+using namespace zeek::BifEvent::pres;
 
 /*
  * This are the relevanti types of the underlying sess protocol
@@ -46,6 +48,7 @@ void PRES_Analyzer::DeliverPacket(int len, const u_char* data, bool orig,
 
     IntrusivePtr<Val> pdu = nullptr;
     IntrusivePtr<RecordVal> user_data = nullptr;
+    void (*enqueue)(Analyzer*, Connection*, int, IntrusivePtr<Val>) = nullptr;
 
     // Read session state, then advance to pdu payload.
     uint8_t sess_state = data[0];
@@ -55,29 +58,37 @@ void PRES_Analyzer::DeliverPacket(int len, const u_char* data, bool orig,
     switch(sess_state) {
         case CONNECT: // 7.1.1
             pdu = parse<CP_type>(len, data, &asn_DEF_CP_type, process_CP_type);
+            enqueue = enqueue_pres_connect;
             if (pdu)
                 parse_context_list(cast_intrusive<RecordVal>(pdu));
             break;
         case ACCEPT: // 7.1.2
             pdu = parse<CPA_PPDU>(len, data, &asn_DEF_CPA_PPDU, process_CPA_PPDU);
+            enqueue = enqueue_pres_accept;
             break;
         case REFUSE: // 7.1.3
             pdu = parse<CPR_PPDU>(len, data, &asn_DEF_CPR_PPDU, process_CPR_PPDU);
+            enqueue = enqueue_pres_refuse;
             break;
         case ABORT: // 7.3.1, 7.3.2
             pdu = parse<Abort_type>(len, data, &asn_DEF_Abort_type, process_Abort_type);
+            enqueue = enqueue_pres_abort;
             break;
         case TYPED_DATA: // 7.5.1
             pdu = parse<Typed_data_type_t>(len, data, &asn_DEF_Typed_data_type, process_Typed_data_type);
+            enqueue = enqueue_pres_typed_data;
             break;
         case RESYNCHRONIZE: // 7.8.1
             pdu = parse<RS_PPDU>(len, data, &asn_DEF_RS_PPDU, process_RS_PPDU);
+            enqueue = enqueue_pres_resynchronize;
             break;
         case RESYNCHRONIZE_ACK: // 7.8.2
             pdu = parse<RSA_PPDU>(len, data, &asn_DEF_CPA_PPDU, process_RSA_PPDU);
+            enqueue = enqueue_pres_resynchronize_ack;
             break;
         default: // nearly any other case
             pdu = parse<CPC_type_t>(len, data, &asn_DEF_CPC_type, process_CPC_type);
+            enqueue = enqueue_pres_data;
             if (pdu)
                 user_data = cast_intrusive<RecordVal>(pdu);
             break;
@@ -99,6 +110,10 @@ void PRES_Analyzer::DeliverPacket(int len, const u_char* data, bool orig,
 
     if(user_data)
         forward(user_data, orig);
+
+    if(enqueue)
+        enqueue(this, Conn(), orig, pdu);
+
 }
 
 

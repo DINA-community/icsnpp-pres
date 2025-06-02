@@ -1,0 +1,10 @@
+module pres;
+
+event pres_connect%(c: connection, is_orig: bool, ppdu: CP_type%);
+event pres_accept%(c: connection, is_orig: bool, ppdu: CPA_PPDU%);
+event pres_refuse%(c: connection, is_orig: bool, ppdu: CPR_PPDU%);
+event pres_abort%(c: connection, is_orig: bool, ppdu: Abort_type%);
+event pres_typed_data%(c: connection, is_orig: bool, ppdu: Typed_data_type%);
+event pres_resynchronize%(c: connection, is_orig: bool, ppdu: RS_PPDU%);
+event pres_resynchronize_ack%(c: connection, is_orig: bool, ppdu: RSA_PPDU%);
+event pres_data%(c: connection, is_orig: bool, ppdu: CPC_type%);
