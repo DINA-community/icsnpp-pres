@@ -33,7 +33,7 @@ enum SessState {
     TYPED_DATA = 33,
 };
 
-constexpr const char* CONTEXT_TABLE_NAME = "iso_8650_context_identifier";
+constexpr const char* CONTEXT_TABLE_NAME = "iso_pres_context_identifier";
 
 PRES_Analyzer::PRES_Analyzer(zeek::Connection* c) : Analyzer("PRES", c) {}
 
