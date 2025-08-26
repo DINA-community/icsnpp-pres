@@ -10,38 +10,29 @@ using namespace zeek;
 
 namespace {
 
-IntrusivePtr<Val> convert(const int *i) { return make_intrusive<IntVal>(*i); }
-IntrusivePtr<Val> convert(const long int *i) {
-  return make_intrusive<IntVal>(*i);
-}
-IntrusivePtr<Val> convert(const unsigned int *i) {
-  return make_intrusive<IntVal>(*i);
-}
-IntrusivePtr<Val> convert(const long unsigned int *i) {
-  return make_intrusive<IntVal>(*i);
-}
-IntrusivePtr<Val> convert(int i) { return make_intrusive<IntVal>(i); }
-IntrusivePtr<Val> convert(long int i) { return make_intrusive<IntVal>(i); }
-IntrusivePtr<Val> convert(unsigned int i) { return make_intrusive<IntVal>(i); }
-IntrusivePtr<Val> convert(long unsigned int i) {
-  return make_intrusive<IntVal>(i);
+template <typename T> inline const T *ptr(const T *v) { return v; }
+
+template <typename T>
+inline typename std::enable_if<!std::is_pointer<T>::value, const T *>::type
+ptr(const T &v) {
+  return &v;
 }
 
-template <typename T> IntrusivePtr<Val> convert(const T *s) {
-  return make_intrusive<StringVal>(s->size,
-                                   reinterpret_cast<const char *>(s->buf));
+inline IntrusivePtr<Val> convert(const int *i) {
+  return make_intrusive<IntVal>(*i);
 }
-
-bool is_bit_set(BIT_STRING_t *s, unsigned int idx) {
-  int byte_no = idx / 8;
-  if (byte_no >= s->size)
-    return false;
-  auto byte = s->buf[byte_no];
-  return byte & (1 << (idx % 8));
+inline IntrusivePtr<Val> convert(const long int *i) {
+  return make_intrusive<IntVal>(*i);
+}
+inline IntrusivePtr<Val> convert(const unsigned int *i) {
+  return make_intrusive<IntVal>(*i);
+}
+inline IntrusivePtr<Val> convert(const long unsigned int *i) {
+  return make_intrusive<IntVal>(*i);
 }
 
 #ifdef _OBJECT_IDENTIFIER_H_
-IntrusivePtr<Val> convert(OBJECT_IDENTIFIER_t *oid) {
+IntrusivePtr<Val> convert(const OBJECT_IDENTIFIER_t *oid) {
   std::string res;
   unsigned long arcs[100];
   int arc_slots = sizeof(arcs) / sizeof(arcs[0]);
@@ -56,6 +47,19 @@ IntrusivePtr<Val> convert(OBJECT_IDENTIFIER_t *oid) {
   return make_intrusive<StringVal>(res);
 }
 #endif
+
+template <typename T> inline IntrusivePtr<Val> convert(const T *s) {
+  return make_intrusive<StringVal>(s->size,
+                                   reinterpret_cast<const char *>(s->buf));
+}
+
+bool is_bit_set(const BIT_STRING_t *s, unsigned int idx) {
+  int byte_no = idx / 8;
+  if (byte_no >= s->size)
+    return false;
+  auto byte = s->buf[byte_no];
+  return byte & (1 << (idx % 8));
+}
 
 /*
  * In the event of an error, the function does not return,
@@ -97,21 +101,21 @@ IntrusivePtr<T> get_field_type(IntrusivePtr<VectorVal> container) {
 
 namespace zeek::plugin::pres {
 
-IntrusivePtr<Val> process_CP_type(CP_type_t *src) {
+IntrusivePtr<Val> process_CP_type(const CP_type_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::CP_type");
     const auto container = make_intrusive<RecordVal>(type);
 
     {
-      const auto _new_src = &src->mode_selector;
+      const auto _new_src = ptr(src->mode_selector);
       const auto src = _new_src;
       const auto res = process_Mode_selector(src);
       container->AssignField("mode_selector", res);
     }
 
     if (src->normal_mode_parameters) {
-      const auto _new_src = src->normal_mode_parameters;
+      const auto _new_src = ptr(src->normal_mode_parameters);
       const auto src = _new_src;
 
       IntrusivePtr<Val> res;
@@ -121,70 +125,70 @@ IntrusivePtr<Val> process_CP_type(CP_type_t *src) {
         const auto container = make_intrusive<RecordVal>(type);
 
         {
-          const auto _new_src = src->protocol_version;
+          const auto _new_src = ptr(src->protocol_version);
           const auto src = _new_src;
           const auto res = process_Protocol_version(src);
           container->AssignField("protocol_version", res);
         }
 
         if (src->calling_presentation_selector) {
-          const auto _new_src = src->calling_presentation_selector;
+          const auto _new_src = ptr(src->calling_presentation_selector);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("calling_presentation_selector", res);
         }
 
         if (src->called_presentation_selector) {
-          const auto _new_src = src->called_presentation_selector;
+          const auto _new_src = ptr(src->called_presentation_selector);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("called_presentation_selector", res);
         }
 
         if (src->presentation_context_definition_list) {
-          const auto _new_src = src->presentation_context_definition_list;
+          const auto _new_src = ptr(src->presentation_context_definition_list);
           const auto src = _new_src;
           const auto res = process_Context_list(src);
           container->AssignField("presentation_context_definition_list", res);
         }
 
         if (src->default_context_name) {
-          const auto _new_src = src->default_context_name;
+          const auto _new_src = ptr(src->default_context_name);
           const auto src = _new_src;
           const auto res = process_Default_context_name(src);
           container->AssignField("default_context_name", res);
         }
 
         if (src->presentation_requirements) {
-          const auto _new_src = src->presentation_requirements;
+          const auto _new_src = ptr(src->presentation_requirements);
           const auto src = _new_src;
           const auto res = process_Presentation_requirements(src);
           container->AssignField("presentation_requirements", res);
         }
 
         if (src->user_session_requirements) {
-          const auto _new_src = src->user_session_requirements;
+          const auto _new_src = ptr(src->user_session_requirements);
           const auto src = _new_src;
           const auto res = process_User_session_requirements(src);
           container->AssignField("user_session_requirements", res);
         }
 
         {
-          const auto _new_src = src->protocol_options;
+          const auto _new_src = ptr(src->protocol_options);
           const auto src = _new_src;
           const auto res = process_Protocol_options(src);
           container->AssignField("protocol_options", res);
         }
 
         if (src->initiators_nominated_context) {
-          const auto _new_src = src->initiators_nominated_context;
+          const auto _new_src = ptr(src->initiators_nominated_context);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("initiators_nominated_context", res);
         }
 
         if (src->user_data) {
-          const auto _new_src = src->user_data;
+          const auto _new_src = ptr(src->user_data);
           const auto src = _new_src;
           const auto res = process_User_data(src);
           container->AssignField("user_data", res);
@@ -201,26 +205,26 @@ IntrusivePtr<Val> process_CP_type(CP_type_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_CPC_type(CPC_type_t *src) {
+IntrusivePtr<Val> process_CPC_type(const CPC_type_t *src) {
   const auto res = process_User_data(src);
   return res;
 }
 
-IntrusivePtr<Val> process_CPA_PPDU(CPA_PPDU_t *src) {
+IntrusivePtr<Val> process_CPA_PPDU(const CPA_PPDU_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::CPA_PPDU");
     const auto container = make_intrusive<RecordVal>(type);
 
     {
-      const auto _new_src = &src->mode_selector;
+      const auto _new_src = ptr(src->mode_selector);
       const auto src = _new_src;
       const auto res = process_Mode_selector(src);
       container->AssignField("mode_selector", res);
     }
 
     if (src->normal_mode_parameters) {
-      const auto _new_src = src->normal_mode_parameters;
+      const auto _new_src = ptr(src->normal_mode_parameters);
       const auto src = _new_src;
 
       IntrusivePtr<Val> res;
@@ -230,14 +234,14 @@ IntrusivePtr<Val> process_CPA_PPDU(CPA_PPDU_t *src) {
         const auto container = make_intrusive<RecordVal>(type);
 
         {
-          const auto _new_src = src->protocol_version;
+          const auto _new_src = ptr(src->protocol_version);
           const auto src = _new_src;
           const auto res = process_Protocol_version(src);
           container->AssignField("protocol_version", res);
         }
 
         if (src->responding_presentation_selector) {
-          const auto _new_src = src->responding_presentation_selector;
+          const auto _new_src = ptr(src->responding_presentation_selector);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("responding_presentation_selector", res);
@@ -245,7 +249,7 @@ IntrusivePtr<Val> process_CPA_PPDU(CPA_PPDU_t *src) {
 
         if (src->presentation_context_definition_result_list) {
           const auto _new_src =
-              src->presentation_context_definition_result_list;
+              ptr(src->presentation_context_definition_result_list);
           const auto src = _new_src;
           const auto res = process_Result_list(src);
           container->AssignField("presentation_context_definition_result_list",
@@ -253,35 +257,35 @@ IntrusivePtr<Val> process_CPA_PPDU(CPA_PPDU_t *src) {
         }
 
         if (src->presentation_requirements) {
-          const auto _new_src = src->presentation_requirements;
+          const auto _new_src = ptr(src->presentation_requirements);
           const auto src = _new_src;
           const auto res = process_Presentation_requirements(src);
           container->AssignField("presentation_requirements", res);
         }
 
         if (src->user_session_requirements) {
-          const auto _new_src = src->user_session_requirements;
+          const auto _new_src = ptr(src->user_session_requirements);
           const auto src = _new_src;
           const auto res = process_User_session_requirements(src);
           container->AssignField("user_session_requirements", res);
         }
 
         {
-          const auto _new_src = src->protocol_options;
+          const auto _new_src = ptr(src->protocol_options);
           const auto src = _new_src;
           const auto res = process_Protocol_options(src);
           container->AssignField("protocol_options", res);
         }
 
         if (src->responders_nominated_context) {
-          const auto _new_src = src->responders_nominated_context;
+          const auto _new_src = ptr(src->responders_nominated_context);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("responders_nominated_context", res);
         }
 
         if (src->user_data) {
-          const auto _new_src = src->user_data;
+          const auto _new_src = ptr(src->user_data);
           const auto src = _new_src;
           const auto res = process_User_data(src);
           container->AssignField("user_data", res);
@@ -298,14 +302,14 @@ IntrusivePtr<Val> process_CPA_PPDU(CPA_PPDU_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_CPR_PPDU(CPR_PPDU_t *src) {
+IntrusivePtr<Val> process_CPR_PPDU(const CPR_PPDU_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::CPR_PPDU");
     const auto container = make_intrusive<RecordVal>(type);
 
     if (src->present == CPR_PPDU_PR_normal_mode_parameters) {
-      const auto _new_src = &src->choice.normal_mode_parameters;
+      const auto _new_src = ptr(src->choice.normal_mode_parameters);
       const auto src = _new_src;
 
       IntrusivePtr<Val> res;
@@ -315,14 +319,14 @@ IntrusivePtr<Val> process_CPR_PPDU(CPR_PPDU_t *src) {
         const auto container = make_intrusive<RecordVal>(type);
 
         {
-          const auto _new_src = src->protocol_version;
+          const auto _new_src = ptr(src->protocol_version);
           const auto src = _new_src;
           const auto res = process_Protocol_version(src);
           container->AssignField("protocol_version", res);
         }
 
         if (src->responding_presentation_selector) {
-          const auto _new_src = src->responding_presentation_selector;
+          const auto _new_src = ptr(src->responding_presentation_selector);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("responding_presentation_selector", res);
@@ -330,7 +334,7 @@ IntrusivePtr<Val> process_CPR_PPDU(CPR_PPDU_t *src) {
 
         if (src->presentation_context_definition_result_list) {
           const auto _new_src =
-              src->presentation_context_definition_result_list;
+              ptr(src->presentation_context_definition_result_list);
           const auto src = _new_src;
           const auto res = process_Result_list(src);
           container->AssignField("presentation_context_definition_result_list",
@@ -338,21 +342,21 @@ IntrusivePtr<Val> process_CPR_PPDU(CPR_PPDU_t *src) {
         }
 
         if (src->default_context_result) {
-          const auto _new_src = src->default_context_result;
+          const auto _new_src = ptr(src->default_context_result);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("default_context_result", res);
         }
 
         if (src->provider_reason) {
-          const auto _new_src = src->provider_reason;
+          const auto _new_src = ptr(src->provider_reason);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("provider_reason", res);
         }
 
         if (src->user_data) {
-          const auto _new_src = src->user_data;
+          const auto _new_src = ptr(src->user_data);
           const auto src = _new_src;
           const auto res = process_User_data(src);
           container->AssignField("user_data", res);
@@ -369,21 +373,21 @@ IntrusivePtr<Val> process_CPR_PPDU(CPR_PPDU_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_Abort_type(Abort_type_t *src) {
+IntrusivePtr<Val> process_Abort_type(const Abort_type_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::Abort_type");
     const auto container = make_intrusive<RecordVal>(type);
 
     if (src->present == Abort_type_PR_aru_ppdu) {
-      const auto _new_src = &src->choice.aru_ppdu;
+      const auto _new_src = ptr(src->choice.aru_ppdu);
       const auto src = _new_src;
       const auto res = process_ARU_PPDU(src);
       container->AssignField("aru_ppdu", res);
     }
 
     if (src->present == Abort_type_PR_arp_ppdu) {
-      const auto _new_src = &src->choice.arp_ppdu;
+      const auto _new_src = ptr(src->choice.arp_ppdu);
       const auto src = _new_src;
       const auto res = process_ARP_PPDU(src);
       container->AssignField("arp_ppdu", res);
@@ -394,14 +398,14 @@ IntrusivePtr<Val> process_Abort_type(Abort_type_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_ARU_PPDU(ARU_PPDU_t *src) {
+IntrusivePtr<Val> process_ARU_PPDU(const ARU_PPDU_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::ARU_PPDU");
     const auto container = make_intrusive<RecordVal>(type);
 
     if (src->present == ARU_PPDU_PR_normal_mode_parameters) {
-      const auto _new_src = &src->choice.normal_mode_parameters;
+      const auto _new_src = ptr(src->choice.normal_mode_parameters);
       const auto src = _new_src;
 
       IntrusivePtr<Val> res;
@@ -411,14 +415,14 @@ IntrusivePtr<Val> process_ARU_PPDU(ARU_PPDU_t *src) {
         const auto container = make_intrusive<RecordVal>(type);
 
         if (src->presentation_context_identifier_list) {
-          const auto _new_src = src->presentation_context_identifier_list;
+          const auto _new_src = ptr(src->presentation_context_identifier_list);
           const auto src = _new_src;
           const auto res = process_Presentation_context_identifier_list(src);
           container->AssignField("presentation_context_identifier_list", res);
         }
 
         if (src->user_data) {
-          const auto _new_src = src->user_data;
+          const auto _new_src = ptr(src->user_data);
           const auto src = _new_src;
           const auto res = process_User_data(src);
           container->AssignField("user_data", res);
@@ -435,21 +439,21 @@ IntrusivePtr<Val> process_ARU_PPDU(ARU_PPDU_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_ARP_PPDU(ARP_PPDU_t *src) {
+IntrusivePtr<Val> process_ARP_PPDU(const ARP_PPDU_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::ARP_PPDU");
     const auto container = make_intrusive<RecordVal>(type);
 
     if (src->provider_reason) {
-      const auto _new_src = src->provider_reason;
+      const auto _new_src = ptr(src->provider_reason);
       const auto src = _new_src;
       const auto res = convert(src);
       container->AssignField("provider_reason", res);
     }
 
     if (src->event_identifier) {
-      const auto _new_src = src->event_identifier;
+      const auto _new_src = ptr(src->event_identifier);
       const auto src = _new_src;
       const auto res = convert(src);
       container->AssignField("event_identifier", res);
@@ -460,28 +464,28 @@ IntrusivePtr<Val> process_ARP_PPDU(ARP_PPDU_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_Typed_data_type(Typed_data_type_t *src) {
+IntrusivePtr<Val> process_Typed_data_type(const Typed_data_type_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::Typed_data_type");
     const auto container = make_intrusive<RecordVal>(type);
 
     if (src->present == Typed_data_type_PR_acPPDU) {
-      const auto _new_src = &src->choice.acPPDU;
+      const auto _new_src = ptr(src->choice.acPPDU);
       const auto src = _new_src;
       const auto res = process_AC_PPDU(src);
       container->AssignField("acPPDU", res);
     }
 
     if (src->present == Typed_data_type_PR_acaPPDU) {
-      const auto _new_src = &src->choice.acaPPDU;
+      const auto _new_src = ptr(src->choice.acaPPDU);
       const auto src = _new_src;
       const auto res = process_ACA_PPDU(src);
       container->AssignField("acaPPDU", res);
     }
 
     if (src->present == Typed_data_type_PR_ttdPPDU) {
-      const auto _new_src = &src->choice.ttdPPDU;
+      const auto _new_src = ptr(src->choice.ttdPPDU);
       const auto src = _new_src;
       const auto res = process_User_data(src);
       container->AssignField("ttdPPDU", res);
@@ -492,28 +496,28 @@ IntrusivePtr<Val> process_Typed_data_type(Typed_data_type_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_AC_PPDU(AC_PPDU_t *src) {
+IntrusivePtr<Val> process_AC_PPDU(const AC_PPDU_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::AC_PPDU");
     const auto container = make_intrusive<RecordVal>(type);
 
     if (src->presentation_context_addition_list) {
-      const auto _new_src = src->presentation_context_addition_list;
+      const auto _new_src = ptr(src->presentation_context_addition_list);
       const auto src = _new_src;
       const auto res = process_Context_list(src);
       container->AssignField("presentation_context_addition_list", res);
     }
 
     if (src->presentation_context_deletion_list) {
-      const auto _new_src = src->presentation_context_deletion_list;
+      const auto _new_src = ptr(src->presentation_context_deletion_list);
       const auto src = _new_src;
       const auto res = process_Presentation_context_deletion_list(src);
       container->AssignField("presentation_context_deletion_list", res);
     }
 
     if (src->user_data) {
-      const auto _new_src = src->user_data;
+      const auto _new_src = ptr(src->user_data);
       const auto src = _new_src;
       const auto res = process_User_data(src);
       container->AssignField("user_data", res);
@@ -524,28 +528,28 @@ IntrusivePtr<Val> process_AC_PPDU(AC_PPDU_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_ACA_PPDU(ACA_PPDU_t *src) {
+IntrusivePtr<Val> process_ACA_PPDU(const ACA_PPDU_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::ACA_PPDU");
     const auto container = make_intrusive<RecordVal>(type);
 
     if (src->presentation_context_addition_result_list) {
-      const auto _new_src = src->presentation_context_addition_result_list;
+      const auto _new_src = ptr(src->presentation_context_addition_result_list);
       const auto src = _new_src;
       const auto res = process_Result_list(src);
       container->AssignField("presentation_context_addition_result_list", res);
     }
 
     if (src->presentation_context_deletion_result_list) {
-      const auto _new_src = src->presentation_context_deletion_result_list;
+      const auto _new_src = ptr(src->presentation_context_deletion_result_list);
       const auto src = _new_src;
       const auto res = process_Presentation_context_deletion_result_list(src);
       container->AssignField("presentation_context_deletion_result_list", res);
     }
 
     if (src->user_data) {
-      const auto _new_src = src->user_data;
+      const auto _new_src = ptr(src->user_data);
       const auto src = _new_src;
       const auto res = process_User_data(src);
       container->AssignField("user_data", res);
@@ -556,21 +560,21 @@ IntrusivePtr<Val> process_ACA_PPDU(ACA_PPDU_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_RS_PPDU(RS_PPDU_t *src) {
+IntrusivePtr<Val> process_RS_PPDU(const RS_PPDU_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::RS_PPDU");
     const auto container = make_intrusive<RecordVal>(type);
 
     if (src->presentation_context_identifier_list) {
-      const auto _new_src = src->presentation_context_identifier_list;
+      const auto _new_src = ptr(src->presentation_context_identifier_list);
       const auto src = _new_src;
       const auto res = process_Presentation_context_identifier_list(src);
       container->AssignField("presentation_context_identifier_list", res);
     }
 
     if (src->user_data) {
-      const auto _new_src = src->user_data;
+      const auto _new_src = ptr(src->user_data);
       const auto src = _new_src;
       const auto res = process_User_data(src);
       container->AssignField("user_data", res);
@@ -581,21 +585,21 @@ IntrusivePtr<Val> process_RS_PPDU(RS_PPDU_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_RSA_PPDU(RSA_PPDU_t *src) {
+IntrusivePtr<Val> process_RSA_PPDU(const RSA_PPDU_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::RSA_PPDU");
     const auto container = make_intrusive<RecordVal>(type);
 
     if (src->presentation_context_identifier_list) {
-      const auto _new_src = src->presentation_context_identifier_list;
+      const auto _new_src = ptr(src->presentation_context_identifier_list);
       const auto src = _new_src;
       const auto res = process_Presentation_context_identifier_list(src);
       container->AssignField("presentation_context_identifier_list", res);
     }
 
     if (src->user_data) {
-      const auto _new_src = src->user_data;
+      const auto _new_src = ptr(src->user_data);
       const auto src = _new_src;
       const auto res = process_User_data(src);
       container->AssignField("user_data", res);
@@ -606,19 +610,19 @@ IntrusivePtr<Val> process_RSA_PPDU(RSA_PPDU_t *src) {
   return res;
 }
 
-IntrusivePtr<Val>
-process_Called_presentation_selector(Called_presentation_selector_t *src) {
+IntrusivePtr<Val> process_Called_presentation_selector(
+    const Called_presentation_selector_t *src) {
   const auto res = convert(src);
   return res;
 }
 
-IntrusivePtr<Val>
-process_Calling_presentation_selector(Calling_presentation_selector_t *src) {
+IntrusivePtr<Val> process_Calling_presentation_selector(
+    const Calling_presentation_selector_t *src) {
   const auto res = convert(src);
   return res;
 }
 
-IntrusivePtr<Val> process_Context_list(Context_list_t *src) {
+IntrusivePtr<Val> process_Context_list(const Context_list_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<VectorType>("pres::Context_list");
@@ -633,21 +637,21 @@ IntrusivePtr<Val> process_Context_list(Context_list_t *src) {
         const auto container = make_intrusive<RecordVal>(type);
 
         {
-          const auto _new_src = &src->presentation_context_identifier;
+          const auto _new_src = ptr(src->presentation_context_identifier);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("presentation_context_identifier", res);
         }
 
         {
-          const auto _new_src = &src->abstract_syntax_name;
+          const auto _new_src = ptr(src->abstract_syntax_name);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("abstract_syntax_name", res);
         }
 
         {
-          const auto _new_src = &src->transfer_syntax_name_list;
+          const auto _new_src = ptr(src->transfer_syntax_name_list);
           const auto src = _new_src;
 
           IntrusivePtr<Val> res;
@@ -677,7 +681,8 @@ IntrusivePtr<Val> process_Context_list(Context_list_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_Default_context_name(Default_context_name_t *src) {
+IntrusivePtr<Val>
+process_Default_context_name(const Default_context_name_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type =
@@ -685,14 +690,14 @@ IntrusivePtr<Val> process_Default_context_name(Default_context_name_t *src) {
     const auto container = make_intrusive<RecordVal>(type);
 
     {
-      const auto _new_src = &src->abstract_syntax_name;
+      const auto _new_src = ptr(src->abstract_syntax_name);
       const auto src = _new_src;
       const auto res = convert(src);
       container->AssignField("abstract_syntax_name", res);
     }
 
     {
-      const auto _new_src = &src->transfer_syntax_name;
+      const auto _new_src = ptr(src->transfer_syntax_name);
       const auto src = _new_src;
       const auto res = convert(src);
       container->AssignField("transfer_syntax_name", res);
@@ -704,19 +709,19 @@ IntrusivePtr<Val> process_Default_context_name(Default_context_name_t *src) {
 }
 
 IntrusivePtr<Val>
-process_Default_context_result(Default_context_result_t *src) {
+process_Default_context_result(const Default_context_result_t *src) {
   const auto res = convert(src);
   return res;
 }
 
-IntrusivePtr<Val> process_Mode_selector(Mode_selector_t *src) {
+IntrusivePtr<Val> process_Mode_selector(const Mode_selector_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::Mode_selector");
     const auto container = make_intrusive<RecordVal>(type);
 
     {
-      const auto _new_src = &src->mode_value;
+      const auto _new_src = ptr(src->mode_value);
       const auto src = _new_src;
       const auto res = convert(src);
       container->AssignField("mode_value", res);
@@ -728,31 +733,31 @@ IntrusivePtr<Val> process_Mode_selector(Mode_selector_t *src) {
 }
 
 IntrusivePtr<Val> process_Presentation_context_addition_list(
-    Presentation_context_addition_list_t *src) {
+    const Presentation_context_addition_list_t *src) {
   const auto res = process_Context_list(src);
   return res;
 }
 
 IntrusivePtr<Val> process_Presentation_context_addition_result_list(
-    Presentation_context_addition_result_list_t *src) {
+    const Presentation_context_addition_result_list_t *src) {
   const auto res = process_Result_list(src);
   return res;
 }
 
 IntrusivePtr<Val> process_Presentation_context_definition_list(
-    Presentation_context_definition_list_t *src) {
+    const Presentation_context_definition_list_t *src) {
   const auto res = process_Context_list(src);
   return res;
 }
 
 IntrusivePtr<Val> process_Presentation_context_definition_result_list(
-    Presentation_context_definition_result_list_t *src) {
+    const Presentation_context_definition_result_list_t *src) {
   const auto res = process_Result_list(src);
   return res;
 }
 
 IntrusivePtr<Val> process_Presentation_context_deletion_list(
-    Presentation_context_deletion_list_t *src) {
+    const Presentation_context_deletion_list_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type =
@@ -770,7 +775,7 @@ IntrusivePtr<Val> process_Presentation_context_deletion_list(
 }
 
 IntrusivePtr<Val> process_Presentation_context_deletion_result_list(
-    Presentation_context_deletion_result_list_t *src) {
+    const Presentation_context_deletion_result_list_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<VectorType>(
@@ -788,7 +793,7 @@ IntrusivePtr<Val> process_Presentation_context_deletion_result_list(
 }
 
 IntrusivePtr<Val> process_Presentation_context_identifier_list(
-    Presentation_context_identifier_list_t *src) {
+    const Presentation_context_identifier_list_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type =
@@ -804,14 +809,14 @@ IntrusivePtr<Val> process_Presentation_context_identifier_list(
         const auto container = make_intrusive<RecordVal>(type);
 
         {
-          const auto _new_src = &src->presentation_context_identifier;
+          const auto _new_src = ptr(src->presentation_context_identifier);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("presentation_context_identifier", res);
         }
 
         {
-          const auto _new_src = &src->transfer_syntax_name;
+          const auto _new_src = ptr(src->transfer_syntax_name);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("transfer_syntax_name", res);
@@ -828,7 +833,7 @@ IntrusivePtr<Val> process_Presentation_context_identifier_list(
 }
 
 IntrusivePtr<Val>
-process_Presentation_requirements(Presentation_requirements_t *src) {
+process_Presentation_requirements(const Presentation_requirements_t *src) {
   static const auto type =
       id::find_type<VectorType>("pres::Presentation_requirements");
   static IntrusivePtr<EnumType> enum_type = nullptr;
@@ -848,7 +853,7 @@ process_Presentation_requirements(Presentation_requirements_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_Protocol_options(Protocol_options_t *src) {
+IntrusivePtr<Val> process_Protocol_options(const Protocol_options_t *src) {
   static const auto type = id::find_type<VectorType>("pres::Protocol_options");
   static IntrusivePtr<EnumType> enum_type = nullptr;
   if (!enum_type) {
@@ -869,7 +874,7 @@ IntrusivePtr<Val> process_Protocol_options(Protocol_options_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_Protocol_version(Protocol_version_t *src) {
+IntrusivePtr<Val> process_Protocol_version(const Protocol_version_t *src) {
   static const auto type = id::find_type<VectorType>("pres::Protocol_version");
   static IntrusivePtr<EnumType> enum_type = nullptr;
   if (!enum_type) {
@@ -887,12 +892,12 @@ IntrusivePtr<Val> process_Protocol_version(Protocol_version_t *src) {
 }
 
 IntrusivePtr<Val> process_Responding_presentation_selector(
-    Responding_presentation_selector_t *src) {
+    const Responding_presentation_selector_t *src) {
   const auto res = convert(src);
   return res;
 }
 
-IntrusivePtr<Val> process_Result_list(Result_list_t *src) {
+IntrusivePtr<Val> process_Result_list(const Result_list_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<VectorType>("pres::Result_list");
@@ -907,21 +912,21 @@ IntrusivePtr<Val> process_Result_list(Result_list_t *src) {
         const auto container = make_intrusive<RecordVal>(type);
 
         {
-          const auto _new_src = &src->result;
+          const auto _new_src = ptr(src->result);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("result", res);
         }
 
         if (src->transfer_syntax_name) {
-          const auto _new_src = src->transfer_syntax_name;
+          const auto _new_src = ptr(src->transfer_syntax_name);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("transfer_syntax_name", res);
         }
 
         if (src->provider_reason) {
-          const auto _new_src = src->provider_reason;
+          const auto _new_src = ptr(src->provider_reason);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("provider_reason", res);
@@ -937,21 +942,21 @@ IntrusivePtr<Val> process_Result_list(Result_list_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_User_data(User_data_t *src) {
+IntrusivePtr<Val> process_User_data(const User_data_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::User_data");
     const auto container = make_intrusive<RecordVal>(type);
 
     if (src->present == User_data_PR_simply_encoded_data) {
-      const auto _new_src = &src->choice.simply_encoded_data;
+      const auto _new_src = ptr(src->choice.simply_encoded_data);
       const auto src = _new_src;
       const auto res = convert(src);
       container->AssignField("simply_encoded_data", res);
     }
 
     if (src->present == User_data_PR_fully_encoded_data) {
-      const auto _new_src = &src->choice.fully_encoded_data;
+      const auto _new_src = ptr(src->choice.fully_encoded_data);
       const auto src = _new_src;
       const auto res = process_Fully_encoded_data(src);
       container->AssignField("fully_encoded_data", res);
@@ -962,7 +967,7 @@ IntrusivePtr<Val> process_User_data(User_data_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_Fully_encoded_data(Fully_encoded_data_t *src) {
+IntrusivePtr<Val> process_Fully_encoded_data(const Fully_encoded_data_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type =
@@ -979,28 +984,28 @@ IntrusivePtr<Val> process_Fully_encoded_data(Fully_encoded_data_t *src) {
   return res;
 }
 
-IntrusivePtr<Val> process_PDV_list(PDV_list_t *src) {
+IntrusivePtr<Val> process_PDV_list(const PDV_list_t *src) {
   IntrusivePtr<Val> res;
   {
     static const auto type = id::find_type<RecordType>("pres::PDV_list");
     const auto container = make_intrusive<RecordVal>(type);
 
     if (src->transfer_syntax_name) {
-      const auto _new_src = src->transfer_syntax_name;
+      const auto _new_src = ptr(src->transfer_syntax_name);
       const auto src = _new_src;
       const auto res = convert(src);
       container->AssignField("transfer_syntax_name", res);
     }
 
     {
-      const auto _new_src = &src->presentation_context_identifier;
+      const auto _new_src = ptr(src->presentation_context_identifier);
       const auto src = _new_src;
       const auto res = convert(src);
       container->AssignField("presentation_context_identifier", res);
     }
 
     {
-      const auto _new_src = &src->presentation_data_values;
+      const auto _new_src = ptr(src->presentation_data_values);
       const auto src = _new_src;
 
       IntrusivePtr<Val> res;
@@ -1011,7 +1016,7 @@ IntrusivePtr<Val> process_PDV_list(PDV_list_t *src) {
 
         if (src->present ==
             PDV_list__presentation_data_values_PR_single_ASN1_type) {
-          const auto _new_src = &src->choice.single_ASN1_type;
+          const auto _new_src = ptr(src->choice.single_ASN1_type);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("single_ASN1_type", res);
@@ -1019,14 +1024,14 @@ IntrusivePtr<Val> process_PDV_list(PDV_list_t *src) {
 
         if (src->present ==
             PDV_list__presentation_data_values_PR_octet_aligned) {
-          const auto _new_src = &src->choice.octet_aligned;
+          const auto _new_src = ptr(src->choice.octet_aligned);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("octet_aligned", res);
         }
 
         if (src->present == PDV_list__presentation_data_values_PR_arbitrary) {
-          const auto _new_src = &src->choice.arbitrary;
+          const auto _new_src = ptr(src->choice.arbitrary);
           const auto src = _new_src;
           const auto res = convert(src);
           container->AssignField("arbitrary", res);
@@ -1044,7 +1049,7 @@ IntrusivePtr<Val> process_PDV_list(PDV_list_t *src) {
 }
 
 IntrusivePtr<Val>
-process_User_session_requirements(User_session_requirements_t *src) {
+process_User_session_requirements(const User_session_requirements_t *src) {
   static const auto type =
       id::find_type<VectorType>("pres::User_session_requirements");
   static IntrusivePtr<EnumType> enum_type = nullptr;

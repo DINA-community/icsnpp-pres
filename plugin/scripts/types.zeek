@@ -134,12 +134,12 @@ export {
   
   type PDV_list: record {
     transfer_syntax_name: Transfer_syntax_name &optional;
-    presentation_context_identifier: Presentation_context_identifier &optional;
+    presentation_context_identifier: Presentation_context_identifier;
     presentation_data_values: record {
       single_ASN1_type: string &optional;
       octet_aligned: string &optional;
       arbitrary: string &optional;
-    } &optional;
+    };
   };
   
   type Fully_encoded_data: vector of PDV_list;
@@ -159,7 +159,7 @@ export {
       default_context_name: Default_context_name &optional;
       presentation_requirements: Presentation_requirements &optional;
       user_session_requirements: User_session_requirements &optional;
-      protocol_options: Protocol_options &optional;
+      protocol_options: Protocol_options;
       initiators_nominated_context: Presentation_context_identifier &optional;
       extensions: record {
       } &optional;
@@ -192,7 +192,7 @@ export {
       presentation_context_definition_result_list: Presentation_context_definition_result_list &optional;
       presentation_requirements: Presentation_requirements &optional;
       user_session_requirements: User_session_requirements &optional;
-      protocol_options: Protocol_options &optional;
+      protocol_options: Protocol_options;
       responders_nominated_context: Presentation_context_identifier &optional;
       user_data: User_data &optional;
     } &optional;
