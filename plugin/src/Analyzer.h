@@ -22,7 +22,7 @@ namespace zeek::plugin::pres {
             IntrusivePtr<Val> parse(
                 int len, const u_char *data,
                 DESCTYPE *desc,
-                IntrusivePtr<Val> (*process)(CTYPE*)
+                IntrusivePtr<Val> (*process)(const CTYPE*)
             );
 
             void parse_context_list(IntrusivePtr<RecordVal>);

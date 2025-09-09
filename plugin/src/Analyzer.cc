@@ -228,7 +228,7 @@ void PRES_Analyzer::forward(IntrusivePtr<RecordVal> user_data, bool orig) {
 template <typename CTYPE, typename DESCTYPE>
 IntrusivePtr<Val> PRES_Analyzer::parse(
     int len, const u_char *data, DESCTYPE *desc,
-    IntrusivePtr<Val> (*process)(CTYPE*)) 
+    IntrusivePtr<Val> (*process)(const CTYPE*)) 
 {
     if (!data || len <= 0 || !desc || !process)
         return nullptr;
