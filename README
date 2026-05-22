@@ -1,63 +1,87 @@
-# ICSNPP-PRES
+ICSNPP-PRES
 
-Industrial Control Systems Network Protocol Parsers (ICSNPP) - Connection-Oriented Presentation Protocol (PRES)
+Industrial Control Systems Network Protocol Parsers (ICSNPP) -
+Connection-Oriented Presentation Protocol (PRES)
 
-## Overview
+Overview
 
-This plugin provides a protocol analyzer for the OSI Presenation Procol (PRES)
-(ISO 8823 / X.226) for use within Zeek. The analyzer enables Zeek to parse
-ppdus.
+This plugin provides a protocol analyzer for the OSI Presenation Procol
+(PRES) (ISO 8823 / X.226) for use within Zeek. The analyzer enables Zeek
+to parse ppdus.
 
-## Dependencies
+Dependencies
 
 As PRES is a protocol based on the OSI stack, the underlying ISO
-protocol layers must also be processed. The following plugins must therefore
-also be installed:
+protocol layers must also be processed. The following plugins must
+therefore also be installed:
 
-- [TPKT](https://github.com/DINA-community/icsnpp-tpkt)
-- [COTP](https://github.com/DINA-community/icsnpp-iso-cotp)
-- [SESS](https://github.com/DINA-community/icsnpp-sess)
+-   TPKT
+-   COTP
+-   SESS
 
-## Installation
+Installation
 
-This script is available as a package for [Zeek Package Manager](https://docs.zeek.org/projects/package-manager/en/stable/index.html).
+This script is available as a package for Zeek Package Manager.
 
-```bash
-zkg refresh
-zkg install pres
-```
+    zkg install https://github.com/DINA-community/icsnpp-pres
 
-If this package is installed from ZKG, it will be added to the available plugins. This can be tested by running `zeek -NN`. If installed correctly, users will see `ANALYZER_PRES` under the list of plugins.
+If this package is installed from ZKG, it will be added to the available
+plugins. This can be tested by running zeek -NN. If installed correctly,
+users will see ANALYZER_PRES under the list of plugins.
 
-If users have ZKG configured to load packages (see `@load packages` in the [ZKG Quickstart Guide](https://docs.zeek.org/projects/package-manager/en/stable/quickstart.html)), this plugin and these scripts will automatically be loaded and ready to go.
+If users have ZKG configured to load packages (see @load packages in the
+ZKG Quickstart Guide), this plugin and these scripts will automatically
+be loaded and ready to go.
 
-## Logging
+Logging
 
-One dataset is logged for each pres association containing the following fields. 
+One dataset is logged for each pres association containing the following
+fields.
 
-| Field             | Type      | Description                                                       |
-| ----------------- |-----------|-------------------------------------------------------------------|
-| ts_start          | time      | Timestamp of the first pdu                                        |
-| ts_end            | time      | Timestamp of the last pdu                                         |
-| uid               | string    | Unique ID for this connection                                     |
-| orig_h            | address   | Source IP address                                                 |
-| orig_p            | port      | Source port                                                       |
-| resp_h            | address   | Destination IP address                                            |
-| resp_p            | port      | Destination port                                                  |
-| refused           | bool      | true if a CPR ppdu was recieved else otherwise                    |
-| refuse_reason     | string    | reason for the refusal if refused is true                         |
-| aborted           | bool      | true if a Abort ppdu was recieved else otherwise                  |
-| abort_reason      | string    | reason for the abort if aborted is true                           |
-| cids              | string    | mapping of the context ids to the object ids in the following form "<CID>:<OID>;..." |
-| data_bytes        | count     | total number of bytes send as user data                           |
-| data_packets      | count     | total number of pdus containing user data                         |
+  ----------------------------------------------------------------------------
+  Field           Type      Description
+  --------------- --------- --------------------------------------------------
+  ts_start        time      Timestamp of the first pdu
 
-## Usage
+  ts_end          time      Timestamp of the last pdu
 
-The plugin enables the integration of application protocols based on the OSI stack. For this, the application protocol anaylzer must have the name `util::canonify_name(“ISO:”+oid)` (e.g. `util::canonify_name("ISO:1.0.9506.4")` which results in "ISO_1_0_9506_4").
+  uid             string    Unique ID for this connection
 
-## License
+  orig_h          address   Source IP address
 
-The software was developed on behalf of the BSI (Federal Office for Information Security)
+  orig_p          port      Source port
 
-Copyright (c) 2025-2026 by DINA-Community BSD 3-Clause. [See License](/COPYING)
+  resp_h          address   Destination IP address
+
+  resp_p          port      Destination port
+
+  refused         bool      true if a CPR ppdu was recieved else otherwise
+
+  refuse_reason   string    reason for the refusal if refused is true
+
+  aborted         bool      true if a Abort ppdu was recieved else otherwise
+
+  abort_reason    string    reason for the abort if aborted is true
+
+  cids            string    mapping of the context ids to the object ids in
+                            the following form “<CID>:<OID>;…”
+
+  data_bytes      count     total number of bytes send as user data
+
+  data_packets    count     total number of pdus containing user data
+  ----------------------------------------------------------------------------
+
+Usage
+
+The plugin enables the integration of application protocols based on the
+OSI stack. For this, the application protocol anaylzer must have the
+name util::canonify_name(“ISO:”+oid)
+(e.g. util::canonify_name("ISO:1.0.9506.4") which results in
+“ISO_1_0_9506_4”).
+
+License
+
+The software was developed on behalf of the BSI (Federal Office for
+Information Security)
+
+Copyright (c) 2025-2026 by DINA-Community BSD 3-Clause. See License
