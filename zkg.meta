@@ -1,5 +1,9 @@
 [package]
 script_dir = scripts
+depends =
+    https://github.com/DINA-community/icsnpp-tpkt *
+    https://github.com/DINA-community/icsnpp-cotp *
+    https://github.com/DINA-community/icsnpp-sess *
 build_command = ./configure && cmake --build build
 test_command = cd testing && btest -c btest.cfg
 summary = Analyzer for OSI Presentation Protocol (PRES)
@@ -16,4 +20,3 @@ features = plugin
 [template_vars]
 name = PRES
 namespace = OSS
-
