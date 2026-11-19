@@ -83,7 +83,7 @@ void PRES_Analyzer::DeliverPacket(int len, const u_char* data, bool orig,
             enqueue = enqueue_pres_resynchronize;
             break;
         case RESYNCHRONIZE_ACK: // 7.8.2
-            pdu = parse<RSA_PPDU>(len, data, &asn_DEF_CPA_PPDU, process_RSA_PPDU);
+            pdu = parse<RSA_PPDU>(len, data, &asn_DEF_RSA_PPDU, process_RSA_PPDU);
             enqueue = enqueue_pres_resynchronize_ack;
             break;
         default: // nearly any other case
